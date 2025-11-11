@@ -12,7 +12,7 @@ app.use(cors());
 require("dotenv").config();
 
 /*** -------------*** MONGODB :: CONNECTION SETUP ***------------- ***/
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ydd3oa0.mongodb.net/?appName=Cluster0`;
 
 const client = new MongoClient(uri, {
@@ -30,10 +30,37 @@ async function run() {
     /*** -------------*** MONGODB :: DATABASE & COLLECTION SETUP ***------------- ***/
     const db = client.db("ankur_DB");
     const usersCollection = db.collection("users");
+    const cropsCollection = db.collection("crops");
 
     /*** -------------*** MONGODB :: API ***------------- ***/
 
-    /*** -------------*** USERS API :: [POST → FINDONE] ***------------- ***/
+    /*** -------------*** CROPS API :: [GET → FIND] ***------------- ***/
+    app.get("/allCrops", async (req, res) => {
+      const result = await cropsCollection.find().toArray();
+      res.send(result);
+    });
+
+    /*** -------------*** CROPS SEARCH API :: [GET → FIND] ***------------- ***/
+    app.get("/cropsSearch", async (req, res) => {
+      const searchText = req.query.search;
+      console.log(searchText);
+      const result = await cropsCollection
+        .find({ name: { $regex: searchText, $options: "i" } })
+        .toArray();
+      res.send(result);
+    });
+
+    /*** -------------*** CROPS DETAILS API :: [GET → FINDONE] ***------------- ***/
+    app.get("/crops/:id", async (req, res) => {
+      const { id } = req.params;
+      const objectId = new ObjectId(id);
+      const filter = { _id: objectId };
+
+      const result = await cropsCollection.findOne(filter);
+      res.send(result);
+    });
+
+    /*** -------------*** USERS API :: [POST → FINDONE → INSERTONE] ***------------- ***/
     app.post("/users", async (req, res) => {
       try {
         const newUser = req.body;
