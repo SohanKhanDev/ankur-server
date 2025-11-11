@@ -31,6 +31,7 @@ async function run() {
     const db = client.db("ankur_DB");
     const usersCollection = db.collection("users");
     const cropsCollection = db.collection("crops");
+    const interestCollection = db.collection("interest");
 
     /*** -------------*** MONGODB :: API ***------------- ***/
 
@@ -52,6 +53,43 @@ async function run() {
 
     /*** -------------*** CROPS DETAILS API :: [GET → FINDONE] ***------------- ***/
     app.get("/crops/:id", async (req, res) => {
+      const { id } = req.params;
+      const objectId = new ObjectId(id);
+      const filter = { _id: objectId };
+
+      const result = await cropsCollection.findOne(filter);
+      res.send(result);
+    });
+
+    /*** -------------*** INTEREST API :: [POST → INSERTONE] ***------------- ***/
+    app.post("/interests/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        const interestId = new ObjectId();
+        const interest = req.body;
+        const newInterest = { _id: interestId, status: "Pending", ...interest };
+
+        /*** -------------*** INSERT INTO INTEREST COLLECTION ***------------- ***/
+        const interestInsert = await interestCollection.insertOne(newInterest); //inset in db
+
+        /*** -------------*** ADD INTEREST INTO CROPS COLLECTION ***------------- ***/
+        const objectId = new ObjectId(id);
+        const filter = { _id: objectId };
+
+        const updateDoc = { $push: { interests: newInterest } };
+
+        const cropUpdate = await cropsCollection.updateOne(filter, updateDoc);
+
+        res.send(cropUpdate, interestInsert.insertedId);
+      } catch (error) {
+        console.error("Error creating/checking user:", error);
+        res.status(500).send({ message: "Internal server error." });
+      }
+    });
+
+    /*** -------------*** INTEREST ADD INTO CROPS API :: [PATCH → UPDATEONE] ***------------- ***/
+    app.patch("/interests/:id", async (req, res) => {
       const { id } = req.params;
       const objectId = new ObjectId(id);
       const filter = { _id: objectId };
