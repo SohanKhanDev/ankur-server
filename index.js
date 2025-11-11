@@ -98,6 +98,59 @@ async function run() {
       res.send(result);
     });
 
+    /*** -------------*** INTEREST ACCPET API :: [PUT → UPDATEONE] ***------------- ***/
+    app.put("/interests/accept", async (req, res) => {
+      const interestId = req.query.interestId;
+      const objectId = new ObjectId(interestId);
+      const filter = { _id: objectId };
+
+      /*** -------------*** GET INTEREST INFO FROM INTEREST COLLECTION ***------------- ***/
+      const interest = await interestCollection.findOne(filter);
+      const interestQty = interest.quantity;
+
+      const updateDoc = { $set: { status: "Accepted" } };
+
+      /*** -------------*** UPDATE INTEREST STATUS INTO INTEREST COLLECTION ***------------- ***/
+      const interestUpdate = await interestCollection.updateOne(
+        filter,
+        updateDoc
+      );
+
+      /*** -------------*** UPDATE INTEREST STATUS INTO CROPS COLLECTION ***------------- ***/
+      const cropUpdate = await cropsCollection.updateOne(
+        { "interests._id": objectId },
+        {
+          $set: { "interests.$.status": "Accepted" },
+          $inc: { quantity: -interestQty },
+        }
+      );
+
+      res.send({ interestId, interestUpdate, cropUpdate });
+    });
+
+    /*** -------------*** INTEREST ACCPET API :: [PUT → UPDATEONE] ***------------- ***/
+    app.put("/interests/reject", async (req, res) => {
+      const interestId = req.query.interestId;
+      const objectId = new ObjectId(interestId);
+      const filter = { _id: objectId };
+
+      const updateDoc = { $set: { status: "Rejected" } };
+
+      /*** -------------*** UPDATE INTEREST STATUS INTO INTEREST COLLECTION ***------------- ***/
+      const interestUpdate = await interestCollection.updateOne(
+        filter,
+        updateDoc
+      );
+
+      /*** -------------*** UPDATE INTEREST STATUS INTO CROPS COLLECTION ***------------- ***/
+      const cropUpdate = await cropsCollection.updateOne(
+        { "interests._id": objectId },
+        { $set: { "interests.$.status": "Rejected" } }
+      );
+
+      res.send({ interestId, interestUpdate, cropUpdate });
+    });
+
     /*** -------------*** USERS API :: [POST → FINDONE → INSERTONE] ***------------- ***/
     app.post("/users", async (req, res) => {
       try {
