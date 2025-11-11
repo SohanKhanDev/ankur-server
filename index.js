@@ -128,7 +128,7 @@ async function run() {
       res.send({ interestId, interestUpdate, cropUpdate });
     });
 
-    /*** -------------*** INTEREST ACCPET API :: [PUT → UPDATEONE] ***------------- ***/
+    /*** -------------*** INTEREST REJECT API :: [PUT → UPDATEONE] ***------------- ***/
     app.put("/interests/reject", async (req, res) => {
       const interestId = req.query.interestId;
       const objectId = new ObjectId(interestId);
@@ -169,6 +169,23 @@ async function run() {
         console.error("Error creating/checking user:", error);
         res.status(500).send({ message: "Internal server error." });
       }
+    });
+
+    /*** -------------*** INTEREST REJECT API :: [PUT → UPDATEONE] ***------------- ***/
+    app.put("/users/edit", async (req, res) => {
+      const email = req.query.email;
+      const { name, image } = req.body;
+      const filter = { email: email };
+
+      const updateDoc = {
+        $set: {
+          name: name,
+          image: image,
+        },
+      };
+
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
     });
 
     await client.db("admin").command({ ping: 1 });
