@@ -32,6 +32,7 @@ async function run() {
     const usersCollection = db.collection("users");
     const cropsCollection = db.collection("crops");
     const interestCollection = db.collection("interest");
+    const testimonialsCollection = db.collection("testimonials");
 
     /*** -------------*** MONGODB :: API ***------------- ***/
 
@@ -185,6 +186,12 @@ async function run() {
       };
 
       const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    /*** -------------*** TESTIMONIALS API :: [GET → FIND] ***------------- ***/
+    app.get("/testimonials", async (req, res) => {
+      const result = await testimonialsCollection.find().toArray();
       res.send(result);
     });
 
