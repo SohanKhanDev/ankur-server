@@ -33,6 +33,8 @@ async function run() {
     const cropsCollection = db.collection("crops");
     const interestCollection = db.collection("interest");
     const testimonialsCollection = db.collection("testimonials");
+    const unitsCollection = db.collection("units");
+    const cropTypesCollection = db.collection("crop_types");
 
     /*** -------------*** MONGODB :: API ***------------- ***/
 
@@ -59,6 +61,41 @@ async function run() {
       const filter = { _id: objectId };
 
       const result = await cropsCollection.findOne(filter);
+      res.send(result);
+    });
+
+    /*** -------------*** CROPS POST API :: [POST → INSERTONE] ***------------- ***/
+    app.post("/addcrop", async (req, res) => {
+      try {
+        const newCrops = req.body;
+        const result = await cropsCollection.insertOne(newCrops); //inset in db
+        res.send(result);
+      } catch (error) {
+        console.error("Error creating crop:", error);
+        res.status(500).send({ message: "Internal server error." });
+      }
+    });
+
+    /*** -------------*** CROPS EDIT API :: [PUT → UPDATEONE] ***------------- ***/
+    app.put("/crop/edit", async (req, res) => {
+      const cropid = req.query.cropid;
+      const filter = { _id: new ObjectId(cropid) };
+
+      const updateCrop = req.body;
+      console.log("updateCrop", updateCrop);
+      const updateDoc = { $set: { ...updateCrop.updatedCrop } };
+      console.log("data i want", updateDoc);
+
+      const result = await cropsCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    /*** -------------*** MY POST API :: [GET → FIND] ***------------- ***/
+    app.get("/myposts", async (req, res) => {
+      const email = req.query.email;
+      const filter = { "owner.ownerEmail": email };
+
+      const result = await cropsCollection.find(filter).toArray();
       res.send(result);
     });
 
@@ -89,8 +126,8 @@ async function run() {
       }
     });
 
-    /*** -------------*** INTEREST ADD INTO CROPS API :: [PATCH → UPDATEONE] ***------------- ***/
-    app.patch("/interests/:id", async (req, res) => {
+    /*** -------------*** INTEREST API :: [GET → FINDONE] ***------------- ***/
+    app.get("/interests/:id", async (req, res) => {
       const { id } = req.params;
       const objectId = new ObjectId(id);
       const filter = { _id: objectId };
@@ -172,7 +209,7 @@ async function run() {
       }
     });
 
-    /*** -------------*** INTEREST REJECT API :: [PUT → UPDATEONE] ***------------- ***/
+    /*** -------------*** USER EDIT API :: [PUT → UPDATEONE] ***------------- ***/
     app.put("/users/edit", async (req, res) => {
       const email = req.query.email;
       const { name, image } = req.body;
@@ -192,6 +229,18 @@ async function run() {
     /*** -------------*** TESTIMONIALS API :: [GET → FIND] ***------------- ***/
     app.get("/testimonials", async (req, res) => {
       const result = await testimonialsCollection.find().toArray();
+      res.send(result);
+    });
+
+    /*** -------------*** UNITS API :: [GET → FIND] ***------------- ***/
+    app.get("/units", async (req, res) => {
+      const result = await unitsCollection.find().toArray();
+      res.send(result);
+    });
+
+    /*** -------------*** UNITS API :: [GET → FIND] ***------------- ***/
+    app.get("/crop-type", async (req, res) => {
+      const result = await cropTypesCollection.find().toArray();
       res.send(result);
     });
 
