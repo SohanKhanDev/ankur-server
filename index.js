@@ -40,7 +40,10 @@ async function run() {
 
     /*** -------------*** CROPS API :: [GET → FIND] ***------------- ***/
     app.get("/allCrops", async (req, res) => {
-      const result = await cropsCollection.find().toArray();
+      const result = await cropsCollection
+        .find()
+        .sort({ createdAt: -1 })
+        .toArray();
       res.send(result);
     });
 
@@ -90,10 +93,30 @@ async function run() {
       res.send(result);
     });
 
+    /*** -------------*** CROPS DELETE API :: [DELETE → UPDATEONE] ***------------- ***/
+    app.delete("/crop/delete", async (req, res) => {
+      const cropid = req.query.cropid;
+      const filter = { _id: new ObjectId(cropid) };
+      console.log(filter);
+
+      const result = await cropsCollection.deleteOne(filter);
+      // const result = await cropsCollection.findOne(filter);
+      res.send(result);
+    });
+
     /*** -------------*** MY POST API :: [GET → FIND] ***------------- ***/
     app.get("/myposts", async (req, res) => {
       const email = req.query.email;
       const filter = { "owner.ownerEmail": email };
+
+      const result = await cropsCollection.find(filter).toArray();
+      res.send(result);
+    });
+
+    /*** -------------*** MY INTEREST API :: [GET → FIND] ***------------- ***/
+    app.get("/myinterests", async (req, res) => {
+      const email = req.query.email;
+      const filter = { "interests.userEmail": email };
 
       const result = await cropsCollection.find(filter).toArray();
       res.send(result);
@@ -187,6 +210,16 @@ async function run() {
       );
 
       res.send({ interestId, interestUpdate, cropUpdate });
+    });
+
+    /*** -------------*** CROPS DELETE API :: [DELETE → UPDATEONE] ***------------- ***/
+    app.delete("/interests/delete", async (req, res) => {
+      const cropid = req.query.cropid;
+      const filter = { cropId: cropid };
+
+      const result = await interestCollection.deleteMany(filter);
+      // const result = await cropsCollection.findOne(filter);
+      res.send(result);
     });
 
     /*** -------------*** USERS API :: [POST → FINDONE → INSERTONE] ***------------- ***/
